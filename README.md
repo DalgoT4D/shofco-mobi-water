@@ -78,3 +78,8 @@ A function on AWS Lambda, with an HTTP endpoint for invocation. The caller must 
 
 The lambda is invoked by sendin a `POST` request to the endpoint https://***********.lambda-url.ap-south-1.on.aws/ with the correct `Authorization` header. The response is always JSON.
 
+Endpoint for API-1: `/user-meter`
+Endpoint for API-2: `/meter-consumption?flow_device_id=XXX[&toDate=XXX&fromDate=XXX]`
+
+If `toDate` is not provided it defaults to the current date. If `fromDate` is not provided it defaults to the previous date. 
+
