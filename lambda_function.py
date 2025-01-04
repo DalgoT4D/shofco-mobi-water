@@ -81,6 +81,7 @@ def lambda_handler(event, context):
                 retval.append({
                     "flow_device_id": flow_device_id,
                     "date": dtiter.strftime("%Y-%m-%d"),
+                    "id": flow_device_id + "_" + dtiter.strftime("%Y-%m-%d"),
                     "value": r.data.decode('utf8')
                 })
                 dtiter += timedelta(days=1)
