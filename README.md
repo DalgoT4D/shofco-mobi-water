@@ -60,6 +60,8 @@ r = requests.get("https://api.mobiwaternet.co.ke/monitoring/v1/flowdevices/flowD
 # r.text == '0.0'
 ```
 
+This number is the total water consumption over the queried time range.
+
 Solution
 ========
 Write a small API of our own (API-C) to wrap the response of the API-2 into a JSON object and call this from Airbyte's no-code connector. 
@@ -70,7 +72,7 @@ Airbyte's connector needs to
 3. For each element, invoke API-2 on that `flowDeviceId`
 
 Since each connector has only one base URL, our API-C wraps API-1 as well as API-2. The response from API-1 is forwarded as received, and the response from API-2 is wrapped into the object
-`{"value": string, "flow_device_id": string}`
+`{"value": string, "flow_device_id": string, "date": date}`
 
 Implementation
 ====================
@@ -79,7 +81,7 @@ A function on AWS Lambda, with an HTTP endpoint for invocation. The caller must 
 The lambda is invoked by sendin a `POST` request to the endpoint https://***********.lambda-url.ap-south-1.on.aws/ with the correct `Authorization` header. The response is always JSON.
 
 Endpoint for API-1: `/user-meter`
-Endpoint for API-2: `/meter-consumption?flow_device_id=XXX[&toDate=XXX&fromDate=XXX]`
+Endpoint for API-2: `/meter-consumption?flow_device_id=XXX&startdate=XXX&tzoffset=XXX`
 
-If `toDate` is not provided it defaults to the current date. If `fromDate` is not provided it defaults to the previous date. 
+We invoke API-2 one day at a time from `startdate` to to the beginning of `today`. The timezone is computed using the `tzoffset` parameter which is an integer representing the UTC offset in minutes.
 
