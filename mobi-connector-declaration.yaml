@@ -1,0 +1,266 @@
+version: 0.85.0
+
+type: DeclarativeSource
+
+check:
+  type: CheckStream
+  stream_names:
+    - user_meter
+
+definitions:
+  streams:
+    user_meter:
+      type: DeclarativeStream
+      name: user_meter
+      primary_key:
+        - flowDeviceId
+      retriever:
+        type: SimpleRetriever
+        requester:
+          $ref: '#/definitions/base_requester'
+          path: user-meter
+          http_method: GET
+        record_selector:
+          type: RecordSelector
+          extractor:
+            type: DpathExtractor
+            field_path: []
+      schema_loader:
+        type: InlineSchemaLoader
+        schema:
+          $ref: '#/schemas/user_meter'
+    meter_consumption:
+      type: DeclarativeStream
+      name: meter_consumption
+      retriever:
+        type: SimpleRetriever
+        requester:
+          $ref: '#/definitions/base_requester'
+          path: meter-consumption
+          http_method: GET
+          request_parameters:
+            tz: '{{config[''tz'']}}'
+        record_selector:
+          type: RecordSelector
+          extractor:
+            type: DpathExtractor
+            field_path: []
+        partition_router:
+          - type: SubstreamPartitionRouter
+            parent_stream_configs:
+              - type: ParentStreamConfig
+                parent_key: flowDeviceId
+                request_option:
+                  type: RequestOption
+                  inject_into: request_parameter
+                  field_name: flow_device_id
+                partition_field: flowDeviceId
+                stream:
+                  $ref: '#/definitions/streams/user_meter'
+      incremental_sync:
+        type: DatetimeBasedCursor
+        cursor_field: date
+        cursor_datetime_formats:
+          - '%Y-%m-%d'
+        datetime_format: '%Y-%m-%d'
+        start_datetime:
+          type: MinMaxDatetime
+          datetime: '{{ config["start_date"] }}'
+          datetime_format: '%Y-%m-%dT%H:%M:%SZ'
+        start_time_option:
+          type: RequestOption
+          inject_into: request_parameter
+          field_name: startdate
+      schema_loader:
+        type: InlineSchemaLoader
+        schema:
+          $ref: '#/schemas/meter_consumption'
+  base_requester:
+    type: HttpRequester
+    url_base: https://7erlq3bzcvzp5ysiejhvcihqba0govzw.lambda-url.ap-south-1.on.aws/
+    authenticator:
+      type: BearerAuthenticator
+      api_token: '{{ config["api_key"] }}'
+
+streams:
+  - $ref: '#/definitions/streams/user_meter'
+  - $ref: '#/definitions/streams/meter_consumption'
+
+spec:
+  type: Spec
+  connection_specification:
+    type: object
+    $schema: http://json-schema.org/draft-07/schema#
+    required:
+      - api_key
+      - start_date
+      - tz
+    properties:
+      api_key:
+        type: string
+        title: API Key
+        airbyte_secret: true
+        order: 0
+      start_date:
+        type: string
+        title: Start date
+        format: date-time
+        pattern: ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$
+        order: 1
+      tz:
+        type: string
+        title: Timezone
+        description: IANA code
+        order: 2
+    additionalProperties: true
+
+metadata:
+  autoImportSchema:
+    user_meter: true
+    meter_consumption: true
+
+schemas:
+  user_meter:
+    type: object
+    $schema: http://json-schema.org/schema#
+    properties:
+      consumptionThreshold:
+        type:
+          - number
+          - 'null'
+      dailyConsumption:
+        type:
+          - number
+          - 'null'
+      deviceId:
+        type:
+          - number
+          - 'null'
+      deviceType:
+        type:
+          - string
+          - 'null'
+      flowDeviceDescription:
+        type:
+          - string
+          - 'null'
+      flowDeviceId:
+        type: number
+      flowDeviceLocation:
+        type:
+          - string
+          - 'null'
+      flowDeviceName:
+        type:
+          - string
+          - 'null'
+      flowDevicePulseRate:
+        type:
+          - number
+          - 'null'
+      flowDeviceSize:
+        type:
+          - number
+          - 'null'
+      hardwareState:
+        type:
+          - string
+          - 'null'
+      lastReceivedFlowData:
+        type:
+          - object
+          - 'null'
+        properties:
+          acceptedConsumption:
+            type:
+              - number
+              - 'null'
+          acceptedFlowRate:
+            type:
+              - number
+              - 'null'
+          flowDataId:
+            type:
+              - number
+              - 'null'
+          flowDeviceState:
+            type:
+              - string
+              - 'null'
+          measuredAt:
+            type:
+              - string
+              - 'null'
+          measuredConsumption:
+            type:
+              - number
+              - 'null'
+          measuredFlowRate:
+            type:
+              - number
+              - 'null'
+          measuredFrom:
+            type:
+              - string
+              - 'null'
+          notificationState:
+            type:
+              - string
+              - 'null'
+          predictedConsumption:
+            type:
+              - number
+              - 'null'
+          predictedFlowRate:
+            type:
+              - number
+              - 'null'
+          rawPulses:
+            type:
+              - number
+              - 'null'
+      organization:
+        type:
+          - object
+          - 'null'
+        properties:
+          organizationCallbackUrl:
+            type:
+              - string
+              - 'null'
+          organizationEmail:
+            type:
+              - string
+              - 'null'
+          organizationId:
+            type:
+              - number
+              - 'null'
+          organizationName:
+            type:
+              - string
+              - 'null'
+          organizationPhoneNo:
+            type:
+              - string
+              - 'null'
+    required:
+      - flowDeviceId
+    additionalProperties: true
+  meter_consumption:
+    type: object
+    $schema: http://json-schema.org/schema#
+    properties:
+      date:
+        type: string
+      flow_device_id:
+        type:
+          - string
+          - 'null'
+      value:
+        type:
+          - string
+          - 'null'
+    required:
+      - date
+    additionalProperties: true
