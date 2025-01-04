@@ -83,5 +83,5 @@ The lambda is invoked by sendin a `POST` request to the endpoint https://*******
 Endpoint for API-1: `/user-meter`
 Endpoint for API-2: `/meter-consumption?flow_device_id=XXX&startdate=XXX&tzoffset=XXX`
 
-We invoke API-2 one day at a time from `startdate` to to the beginning of `today`. The timezone is computed using the `tzoffset` parameter which is an integer representing the UTC offset in minutes.
+We invoke API-2 one day at a time from `startdate` to to the beginning of `today`. The timezone is computed using the `tzoffset` parameter which is the timezone's IANA code.
 
