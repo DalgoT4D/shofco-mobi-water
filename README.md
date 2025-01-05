@@ -78,19 +78,19 @@ Implementation
 ====================
 A function on AWS Lambda, with an HTTP endpoint for invocation. The caller must pass a Bearer token to authenticate the request. The lambda compares this incoming token with the token saved in the environment variable `DALGO_BEARER_TOKEN`. The lambda then calls the Mobi API using the  `MOBI_BEARER_TOKEN`.
 
-The lambda is invoked by sendin a `POST` request to the endpoint https://***********.lambda-url.ap-south-1.on.aws/ with the correct `Authorization` header. The response is always JSON.
+The lambda is invoked by sending a `POST` request to the endpoint `https://***********.lambda-url.ap-south-1.on.aws/` with the correct `Authorization` header. The response is always JSON.
 
 Endpoint for API-1: `/user-meter`
 Endpoint for API-2: `/meter-consumption?flow_device_id=XXX&startdate=XXX&tz=XXX`
 
-We invoke API-2 one day at a time from `startdate` to to the beginning of `today`. The timezone is computed using the `tz` parameter which is the timezone's IANA code.
+We invoke API-2 one day at a time from the beginning of `startdate` to to the beginning of `today`. The timezone is computed using the `tz` parameter which is the timezone's IANA code.
 
 The response is a list of values of the form
 ```
-id:
+id: <primary key>
 flow_device_id:
-date:
+date: <yyyy-mm-dd>
 value:
 ```
 
-where `id` can be used as a primary key in a target table
+
